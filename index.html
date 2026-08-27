@@ -198,7 +198,13 @@ input,textarea,select{width:100%;padding:12px 13px;margin:6px 0 12px;border-radi
 function applyTheme(){const saved=localStorage.getItem("setlistTheme")||"auto";const dark=saved==="dark"||(saved==="auto"&&window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches);document.documentElement.dataset.theme=dark?"dark":"light";["Light","Dark","Auto"].forEach(x=>document.getElementById("theme"+x)?.classList.remove("active"));document.getElementById("theme"+(saved==="light"?"Light":saved==="dark"?"Dark":"Auto"))?.classList.add("active");document.querySelector('meta[name="theme-color"]')?.setAttribute("content",dark?"#0f1117":"#f4f6fa")}
 function setTheme(mode){localStorage.setItem("setlistTheme",mode);applyTheme();toast(mode==="light"?"☀️ Modo claro":mode==="dark"?"🌙 Modo oscuro":"🖥️ Modo automático")}
 
-if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("service-worker.js").catch(()=>{}));}
+if("serviceWorker" in navigator){
+  window.addEventListener("load",()=>{
+    navigator.serviceWorker.register("service-worker.js",{updateViaCache:"none"})
+      .then(reg=>reg.update())
+      .catch(()=>{});
+  });
+}
 applyTheme();
 if(window.matchMedia){window.matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change",()=>{if((localStorage.getItem("setlistTheme")||"auto")==="auto")applyTheme()})}
 const SECCIONES=[["intro","INTRO"],["verso","VERSO"],["precoro","PRECORO"],["coro","CORO"],["instrumental","INSTRUMENTAL"],["puente","PUENTE"],["solo","SOLO"],["final","FINAL"]];
