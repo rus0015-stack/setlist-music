@@ -232,7 +232,62 @@ function guardarNombreSetlist(){config.nombre=document.getElementById("nombreSet
 function normalizarNota(n){return EQUIVALENCIAS[n]||n}
 function obtenerPosicion(n){return NOTAS.indexOf(normalizarNota(n))}
 function normalizarAcordesTexto(texto){if(!texto)return "";let t=String(texto).replace(/\s*[-–—]\s*/g," | ");const patron=/(^|[\s|([\{,:;])([a-g])([#b]?)(maj7|maj9|maj|m7|m9|m|7|sus4|sus2|dim7|dim|aug|add9|add2|6|9)?(?=$|[\s|)\]\},:;.])/g;return t.replace(patron,(m,a,n,al,q)=>a+n.toUpperCase()+(al||"")+(q||""))}
-function crearEditorEstructura(datos={}){const c=document.getElementById("estructuraCancion");c.innerHTML="";SECCIONES.forEach(([k,n])=>{const d=document.createElement("div");d.className="section-card";d.innerHTML=`<label><b>🎵 ${n}</b></label><textarea id="sec_${k}" class="campoSeccion" rows="1" placeholder="Ej.: D | A | Bm | G">${esc(normalizarAcordesTexto(datos[k]||""))}</textarea>`;c.appendChild(d);d.querySelector("textarea").addEventListener("blur",function(){this.value=normalizarAcordesTexto(this.value)})})}
+function crearEditorEstructura(datos={}){
+  const c=document.getElementById("estructuraCancion");
+  c.innerHTML="";
+
+  SECCIONES.forEach(([k,n])=>{
+    const d=document.createElement("div");
+    d.className="section-card";
+
+    d.innerHTML=`
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px">
+        <label><b>🎵 ${n}</b></label>
+        <button type="button" class="secondary fit botonSeparador" title="Insertar separador">|</button>
+      </div>
+
+      <textarea
+        id="sec_${k}"
+        class="campoSeccion"
+        rows="1"
+        placeholder="Ej.: D | A | Bm | G"
+      >${esc(normalizarAcordesTexto(datos[k]||""))}</textarea>
+    `;
+
+    c.appendChild(d);
+
+    const textarea=d.querySelector("textarea");
+    const boton=d.querySelector(".botonSeparador");
+
+    textarea.addEventListener("blur",function(){
+      this.value=normalizarAcordesTexto(this.value);
+    });
+
+    boton.addEventListener("click",function(){
+      textarea.focus();
+
+      const inicio=textarea.selectionStart;
+      const fin=textarea.selectionEnd;
+      const texto=textarea.value;
+
+      const antes=texto.substring(0,inicio);
+      const despues=texto.substring(fin);
+
+      let separador="|";
+
+      if(antes && !/\s$/.test(antes)) separador=" | ";
+      else if(despues && !/^\s/.test(despues)) separador="| ";
+
+      textarea.value=antes+separador+despues;
+
+      const nuevaPos=inicio+separador.length;
+      textarea.setSelectionRange(nuevaPos,nuevaPos);
+
+      textarea.dispatchEvent(new Event("input",{bubbles:true}));
+      textarea.focus();
+    });
+  });
+}
 function obtenerEstructura(){const o={};SECCIONES.forEach(([k])=>o[k]=normalizarAcordesTexto(document.getElementById("sec_"+k)?.value||""));return o}
 function estructuraAContenido(o){return SECCIONES.filter(([k])=>(o[k]||"").trim()).map(([k,n])=>n+"\n"+o[k].trim()).join("\n\n")}
 function contenidoAEstructura(cont){const o={};SECCIONES.forEach(([k])=>o[k]="");let actual=null;const mapa=Object.fromEntries(SECCIONES.map(([k,n])=>[n,k]));(cont||"").split(/\r?\n/).forEach(l=>{const t=l.trim(),k=mapa[t.toUpperCase()];if(k)actual=k;else if(actual)o[actual]+=(o[actual]?"\n":"")+l});return o}
